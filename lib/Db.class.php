@@ -157,6 +157,46 @@ class Db
 
 		return $this->query->execute();
 	}
+	` public function select_count($table)
+    {
+        $sql_str = 'SELECT ';
+
+        if (is_array($table))
+        {
+            if (is_array($table[1]))
+            {
+                $sql_str .= implode(', ', $table[1]) . ' FROM ';
+            }
+            else
+            {
+                $sql_str .= $table[1] . ' FROM ';
+            }
+            $sql_str .= $this->prefix . $table[0];
+        }
+        else
+        {
+            $sql_str .= ' COUNT(*) FROM ' . $this->prefix . $table;
+        }
+
+        try
+        {
+            $this->query = $this->dbh->prepare($sql_str);
+            $this->query->execute();
+            $res =  $this->query->fetchColumn();
+            return $res;
+        }
+        catch (\PDOException $e)
+        {
+            error_log($e);
+
+            return false;
+        }
+    }`
+
+//usage  
+//$member = $db->select_count('member');
+//echo $member;
+
 
 	/**
 	 * method select.
