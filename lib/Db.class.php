@@ -671,5 +671,73 @@ class Db
 
 		return $this->query->execute();
 	}
+	   public function select_count($table, $where = [])
+    {
+        $sql_str = 'SELECT ';
+
+        if (is_array($table))
+        {
+            if (is_array($table[1]))
+            {
+                $sql_str .= implode(', ', $table[1]) . ' FROM ';
+            }
+            else
+            {
+                $sql_str .= $table[1] . ' FROM ';
+            }
+            $sql_str .= $this->prefix . $table[0];
+        }
+        else
+        {
+            $sql_str .= ' COUNT(*) FROM ' . $this->prefix . $table;
+        }
+
+
+        $add_and = false;
+        if (!empty($where) and is_array($where))
+        {
+            // append WHERE if necessary
+            $sql_str .= ' WHERE ';
+            // add each clause using parameter array
+            foreach ($where as $key => $val)
+            {
+                // only add AND after the first clause item has been appended
+                if ($add_and)
+                {
+                    $sql_str .= ' AND ';
+                }
+                else
+                {
+                    $add_and = true;
+                }
+
+                // append clause item
+                $sql_str .= $key . ' = :' . $key;
+            }
+        }
+
+        try
+        {
+            $this->query = $this->dbh->prepare($sql_str);
+            if (!empty($where) and is_array($where))
+            {
+                // bind each parameter in the array
+                foreach ($where as $key => $val)
+                {
+                    $this->query->bindValue(':' . $key, $val);
+                }
+            }
+
+            $this->query->execute();
+            $res =  $this->query->fetchColumn();
+            return $res;
+        }
+        catch (\PDOException $e)
+        {
+            error_log($e);
+
+            return false;
+        }
+    }
 
 }
